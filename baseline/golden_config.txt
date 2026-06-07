@@ -1,0 +1,2 @@
+set service ssh
+set service ntp

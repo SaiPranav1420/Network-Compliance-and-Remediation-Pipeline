@@ -1,0 +1,14 @@
+---
+- name: Ensure SSH and NTP compliance on VyOS routers
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Ensure SSH service is enabled on port 22
+      vyos.vyos.vyos_config:
+        lines:
+          - set service ssh port '22'
+
+    - name: Ensure NTP service is enabled
+      vyos.vyos.vyos_config:
+        lines:
+          - set service ntp
