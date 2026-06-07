@@ -47,34 +47,44 @@ The architecture implements a **closed-loop automation workflow** consisting of 
 
 ```mermaid
 flowchart TD
-    subgraph Automation_Node [Ubuntu Automation Server]
+    subgraph Automation_Node [Ubuntu Automation Server - 192.168.56.102]
         INV[inventory.py] -->|Target Hosts| BK[backup.py]
-        BK -->|1. Netmiko SSH| R1[R1 - VyOS]
-        BK -->|1. Netmiko SSH| R2[R2 - VyOS]
-        BK -->|1. Netmiko SSH| R3[R3 - VyOS]
+        CF1[configs/R1.txt]
+        CF2[configs/R2.txt]
+        CF3[configs/R3.txt]
         
-        R1 -.->|2. Save Running Config| CF1[configs/R1.txt]
-        R2 -.->|2. Save Running Config| CF2[configs/R2.txt]
-        R3 -.->|2. Save Running Config| CF3[configs/R3.txt]
+        COMP[compliance.py] -->|3. Validate Policies| CR[reports/compliance_report.txt]
+        DF[drift_detection.py] -->|4. Generate Diff| DR[reports/drift_report.txt]
+        GLD[(baseline/golden_config.txt)] -->|Compare Against| DF
         
-        CF1 --> COMP[compliance.py]
+        CF1 --> COMP
         CF2 --> COMP
         CF3 --> COMP
         
-        COMP -->|3. Validate Policies| CR[reports/compliance_report.txt]
-        
-        CF1 --> DF[drift_detection.py]
+        CF1 --> DF
         CF2 --> DF
         CF3 --> DF
-        GLD[(baseline/golden_config.txt)] -->|Compare Against| DF
-        
-        DF -->|4. Generate Diff| DR[reports/drift_report.txt]
         
         DR -->|5. If DRIFT Detected| ANS[Ansible Controller]
-        ANS -->|6. Run playbook restore_ssh.yml| R1
-        ANS -->|6. Run playbook restore_ssh.yml| R2
-        ANS -->|6. Run playbook restore_ssh.yml| R3
     end
+
+    subgraph Routers [VyOS Routers (VirtualBox VMs)]
+        R1[R1 - VyOS<br/>192.168.56.11]
+        R2[R2 - VyOS<br/>192.168.56.12]
+        R3[R3 - VyOS<br/>192.168.56.13]
+    end
+
+    BK -->|1. Netmiko SSH| R1
+    BK -->|1. Netmiko SSH| R2
+    BK -->|1. Netmiko SSH| R3
+
+    R1 -.->|2. Save Running Config| CF1
+    R2 -.->|2. Save Running Config| CF2
+    R3 -.->|2. Save Running Config| CF3
+
+    ANS -->|6. Run playbook restore_ssh.yml| R1
+    ANS -->|6. Run playbook restore_ssh.yml| R2
+    ANS -->|6. Run playbook restore_ssh.yml| R3
 ```
 
 ---
